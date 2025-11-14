@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "certbot-dns-regru"
-version="1.0.4"
+version="1.0.5"
 description = "Reg.ru DNS authenticator plugin for Certbot"
 readme = "README.md"
 requires-python = ">=3.4"
