@@ -51,7 +51,7 @@ Linux:
 sudo certbot certonly \
   --authenticator dns-regru \
   --dns-regru-credentials /etc/letsencrypt/regru.ini \
-  --dns-regru-propagation-seconds 10 \
+  --dns-regru-propagation-seconds 180 \
   -d sub.domain.tld -d '*.wildcard.tld'
 ```
 
@@ -61,7 +61,7 @@ Windows (PowerShell):
 certbot certonly `
   --authenticator dns-regru `
   --dns-regru-credentials C:\path\to\regru.ini `
-  --dns-regru-propagation-seconds 10 `
+  --dns-regru-propagation-seconds 180 `
   -d sub.domain.tld -d '*.wildcard.tld'
 ```
 

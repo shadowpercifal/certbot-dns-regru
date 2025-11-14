@@ -51,7 +51,7 @@ class Authenticator(dns_common.DNSAuthenticator):
 
     @classmethod
     def add_parser_arguments(cls, add):  # pylint: disable=arguments-differ
-        super(Authenticator, cls).add_parser_arguments(add, default_propagation_seconds=10)
+        super(Authenticator, cls).add_parser_arguments(add, default_propagation_seconds=180)
         add('credentials', help='Path to Reg.ru credentials INI file', default='/etc/letsencrypt/regru.ini')
 
     def more_info(self):  # pylint: disable=missing-docstring,no-self-use
