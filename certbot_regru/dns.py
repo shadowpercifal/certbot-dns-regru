@@ -66,9 +66,6 @@ class Authenticator(dns_common.DNSAuthenticator):
             {
                 'username': 'Username of the Reg.ru account.',
                 'password': 'Password of the Reg.ru account.',
-                'service_id': '(Optional) Reg.ru service identifier; if provided, use service-scoped DNS.',
-                'cert_path': '(Optional) Path to client SSL certificate (PEM).',
-                'key_path': '(Optional) Path to client SSL private key (PEM).',
             }
         )
 

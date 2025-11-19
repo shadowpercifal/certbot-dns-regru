@@ -116,6 +116,10 @@ if [[ -z ${REG_RU_TEST_SUBDOMAIN:-} && $NON_INTERACTIVE -eq 0 ]]; then
 fi
 REG_RU_TEST_SUBDOMAIN=${REG_RU_TEST_SUBDOMAIN:-sub}
 
+if [[ -z ${REG_RU_SERVICE_ID:-} && $NON_INTERACTIVE -eq 0 ]]; then
+	read -r -p "Service ID for tests (optional): " REG_RU_SERVICE_ID
+fi
+
 # Optional client cert/key prompts (press Enter to skip)
 if [[ -z ${REG_RU_CERT_PATH:-} && $NON_INTERACTIVE -eq 0 ]]; then
 	read -r -p "Client SSL certificate path (optional): " REG_RU_CERT_PATH || true
