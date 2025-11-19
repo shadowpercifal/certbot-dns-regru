@@ -18,6 +18,7 @@
 #   REG_RU_TEST_DOMAIN / -d <domain>
 # Optional:
 #   REG_RU_TEST_SUBDOMAIN / -s <label> (default: sub)
+#   REG_RU_SERVICE_ID / -i <service_id>  (use service-scoped DNS instead of domain)
 # Flags:
 #   -n  Skip virtualenv creation/activation
 #   -y  Non-interactive: do not prompt; abort if required values missing
@@ -26,6 +27,7 @@
 # Examples:
 #   REG_RU_USERNAME=u REG_RU_PASSWORD=p REG_RU_TEST_DOMAIN=example.com bash test.sh
 #   bash test.sh -u u -p p -d example.com -s test
+#   bash test.sh -u u -p p -d example.com -i 123456
 #   bash test.sh -u u -p p -d example.com -n -y   # CI mode
 
 set -euo pipefail
@@ -36,12 +38,13 @@ SHOW_HELP=0
 SKIP_VENV=0
 NON_INTERACTIVE=0
 
-while getopts ":u:p:d:s:nyh" opt; do
+while getopts ":u:p:d:s:i:nyh" opt; do
 	case $opt in
 		u) REG_RU_USERNAME="$OPTARG" ;;
 		p) REG_RU_PASSWORD="$OPTARG" ;;
 		d) REG_RU_TEST_DOMAIN="$OPTARG" ;;
 		s) REG_RU_TEST_SUBDOMAIN="$OPTARG" ;;
+		i) REG_RU_SERVICE_ID="$OPTARG" ;;
 		n) SKIP_VENV=1 ;;
 		y) NON_INTERACTIVE=1 ;;
 		h) SHOW_HELP=1 ;;
@@ -120,6 +123,9 @@ if [[ -z ${REG_RU_USERNAME:-} || -z ${REG_RU_PASSWORD:-} || -z ${REG_RU_TEST_DOM
 fi
 
 export REG_RU_USERNAME REG_RU_PASSWORD REG_RU_TEST_DOMAIN REG_RU_TEST_SUBDOMAIN RUN_REG_RU_LIVE_TESTS=1
+if [[ -n ${REG_RU_SERVICE_ID:-} ]]; then
+	export REG_RU_SERVICE_ID
+fi
 
 echo "Running mandatory live tests (dns_test_real)"
 LIVE_STATUS=0

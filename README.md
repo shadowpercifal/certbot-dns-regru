@@ -28,7 +28,20 @@ For older Ubuntu distributions check out this PPA:
    ```
    dns_regru_username=<USERNAME>
    dns_regru_password=<PASSWORD>
-    ```
+   ```
+
+   IF you have configured authentication via SSL certificates in API settings you need to specify path to key and certificate
+   ```
+   dns_regru_cert_path=/path/to/cert.pem
+   dns_regru_key_path=/path/to/key.pem
+   ```
+   
+   If you use reg.ru's service to manage external domains - you need to specify `service_id`. Just add the following to config:
+   ```
+   dns_regru_service_id=<SERVICE_ID>
+   ```
+
+   You can get service_id from page url of each domain's service
 
 3. Make sure the file is only readable by root! Otherwise all your domains might be in danger:
    ```

@@ -22,6 +22,7 @@
 
 
 import logging
+import os
 
 import json
 import requests
@@ -65,6 +66,9 @@ class Authenticator(dns_common.DNSAuthenticator):
             {
                 'username': 'Username of the Reg.ru account.',
                 'password': 'Password of the Reg.ru account.',
+                'service_id': '(Optional) Reg.ru service identifier; if provided, use service-scoped DNS.',
+                'cert_path': '(Optional) Path to client SSL certificate (PEM).',
+                'key_path': '(Optional) Path to client SSL private key (PEM).',
             }
         )
 
@@ -75,16 +79,59 @@ class Authenticator(dns_common.DNSAuthenticator):
         self._get_regru_client().del_txt_record(validation_name, validation)
 
     def _get_regru_client(self):
-        return _RegRuClient(self.credentials.conf('username'), self.credentials.conf('password'))
+        service_id = None
+        try:
+            service_id = self.credentials.conf('service_id')
+        except Exception:  # service_id is optional
+            pass
+        cert_tuple = None
+        cert_path = None
+        key_path = None
+        cert_error = None
+        try:
+            cert_path = self.credentials.conf('cert_path')
+        except Exception:
+            cert_path = None
+        try:
+            key_path = self.credentials.conf('key_path')
+        except Exception:
+            key_path = None
+        if cert_path or key_path:
+            if not cert_path or not key_path:
+                cert_error = 'Both cert_path and key_path must be provided when using client SSL authentication.'
+            else:
+                # Validate existence and readability
+                for p in (cert_path, key_path):
+                    if not os.path.isfile(p):
+                        cert_error = 'File not found: {0}'.format(p)
+                        break
+                    try:
+                        with open(p, 'rb'):
+                            pass
+                    except Exception as e:
+                        cert_error = 'Cannot read {0}: {1}'.format(p, e)
+                        break
+                if not cert_error:
+                    cert_tuple = (cert_path, key_path)
+        if cert_error:
+            raise errors.PluginError(cert_error)
+        return _RegRuClient(
+            self.credentials.conf('username'),
+            self.credentials.conf('password'),
+            service_id=service_id,
+            cert=cert_tuple
+        )
 
 
 class _RegRuClient(object):
-    """
-    Encapsulates all communication with the Reg.ru
+    """Encapsulates communication with the Reg.ru API.
+
+    Supports either domain-based operations (default) or service-based
+    operations when a `service_id` credential is supplied.
     """
 
-    def __init__(self, username, password):
-        self.http = _HttpClient()
+    def __init__(self, username, password, service_id=None, cert=None):
+        self.http = _HttpClient(cert=cert)
         self.options = {
             'username': username,
             'password': password,
@@ -93,6 +140,7 @@ class _RegRuClient(object):
             'output_format': 'json',
             'input_format': 'json',
         }
+        self.service_id = service_id
 
     def add_txt_record(self, record_name, record_content):
         """
@@ -153,10 +201,14 @@ class _RegRuClient(object):
         :returns: POST parameters
         :rtype: dict
         """
-        pieces = domain.split('.')
-
-        input_data['subdomain'] = '.'.join(pieces[:-2])
-        input_data['domains'] = [{'dname': '.'.join(pieces[-2:])}]
+        if self.service_id:
+            # Service-scoped request: replace domain list with service_id reference
+            input_data['subdomain'] = ''  # no subdomain context for service scope
+            input_data['domains'] = [{'service_id': self.service_id}]
+        else:
+            pieces = domain.split('.')
+            input_data['subdomain'] = '.'.join(pieces[:-2])
+            input_data['domains'] = [{'dname': '.'.join(pieces[-2:])}]
 
         data = self.options.copy()
         data.update({'input_data': json.dumps(input_data)})
@@ -191,9 +243,10 @@ class _RegRuClient(object):
 
 
 class _HttpClient(object):
-    """
-    Encapsulates HTTP requests
-    """
+    """Encapsulates HTTP requests (optionally with client certificate)."""
+
+    def __init__(self, cert=None):
+        self.cert = cert
 
     def send(self, url, data):
         """
@@ -202,8 +255,7 @@ class _HttpClient(object):
         :param dict data: Dictionary (will be form-encoded) to send in the body of the :class:`Request`.
         :raises requests.exceptions.RequestException: if an error occurs communicating with HTTP server
         """
-
-        response = requests.post(url, data=data)
+        response = requests.post(url, data=data, cert=self.cert)
         response.raise_for_status()
 
         return response.json()
