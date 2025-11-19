@@ -19,6 +19,8 @@
 # Optional:
 #   REG_RU_TEST_SUBDOMAIN / -s <label> (default: sub)
 #   REG_RU_SERVICE_ID / -i <service_id>  (use service-scoped DNS instead of domain)
+#   REG_RU_CERT_PATH / -c <path>  (optional client SSL cert PEM)
+#   REG_RU_KEY_PATH  / -k <path>  (optional client SSL key  PEM)
 # Flags:
 #   -n  Skip virtualenv creation/activation
 #   -y  Non-interactive: do not prompt; abort if required values missing
@@ -28,6 +30,7 @@
 #   REG_RU_USERNAME=u REG_RU_PASSWORD=p REG_RU_TEST_DOMAIN=example.com bash test.sh
 #   bash test.sh -u u -p p -d example.com -s test
 #   bash test.sh -u u -p p -d example.com -i 123456
+#   bash test.sh -u u -p p -d example.com -c /path/cert.pem -k /path/key.pem
 #   bash test.sh -u u -p p -d example.com -n -y   # CI mode
 
 set -euo pipefail
@@ -38,13 +41,15 @@ SHOW_HELP=0
 SKIP_VENV=0
 NON_INTERACTIVE=0
 
-while getopts ":u:p:d:s:i:nyh" opt; do
+while getopts ":u:p:d:s:i:c:k:nyh" opt; do
 	case $opt in
 		u) REG_RU_USERNAME="$OPTARG" ;;
 		p) REG_RU_PASSWORD="$OPTARG" ;;
 		d) REG_RU_TEST_DOMAIN="$OPTARG" ;;
 		s) REG_RU_TEST_SUBDOMAIN="$OPTARG" ;;
 		i) REG_RU_SERVICE_ID="$OPTARG" ;;
+		c) REG_RU_CERT_PATH="$OPTARG" ;;
+		k) REG_RU_KEY_PATH="$OPTARG" ;;
 		n) SKIP_VENV=1 ;;
 		y) NON_INTERACTIVE=1 ;;
 		h) SHOW_HELP=1 ;;
@@ -111,6 +116,14 @@ if [[ -z ${REG_RU_TEST_SUBDOMAIN:-} && $NON_INTERACTIVE -eq 0 ]]; then
 fi
 REG_RU_TEST_SUBDOMAIN=${REG_RU_TEST_SUBDOMAIN:-sub}
 
+# Optional client cert/key prompts (press Enter to skip)
+if [[ -z ${REG_RU_CERT_PATH:-} && $NON_INTERACTIVE -eq 0 ]]; then
+	read -r -p "Client SSL certificate path (optional): " REG_RU_CERT_PATH || true
+fi
+if [[ -z ${REG_RU_KEY_PATH:-} && $NON_INTERACTIVE -eq 0 ]]; then
+	read -r -p "Client SSL key path (optional): " REG_RU_KEY_PATH || true
+fi
+
 if [[ -z ${REG_RU_USERNAME:-} || -z ${REG_RU_PASSWORD:-} || -z ${REG_RU_TEST_DOMAIN:-} ]]; then
 	echo "All of REG_RU_USERNAME, REG_RU_PASSWORD, REG_RU_TEST_DOMAIN are required." >&2
 	if [[ $NON_INTERACTIVE -eq 1 ]]; then
@@ -125,6 +138,12 @@ fi
 export REG_RU_USERNAME REG_RU_PASSWORD REG_RU_TEST_DOMAIN REG_RU_TEST_SUBDOMAIN RUN_REG_RU_LIVE_TESTS=1
 if [[ -n ${REG_RU_SERVICE_ID:-} ]]; then
 	export REG_RU_SERVICE_ID
+fi
+if [[ -n ${REG_RU_CERT_PATH:-} ]]; then
+	export REG_RU_CERT_PATH
+fi
+if [[ -n ${REG_RU_KEY_PATH:-} ]]; then
+	export REG_RU_KEY_PATH
 fi
 
 echo "Running mandatory live tests (dns_test_real)"

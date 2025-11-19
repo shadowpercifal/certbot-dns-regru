@@ -47,6 +47,8 @@ LIVE_ENABLED = all(os.environ.get(v) for v in REQUIRED_VARS) and os.environ.get(
 USERNAME = os.environ.get("REG_RU_USERNAME")
 PASSWORD = os.environ.get("REG_RU_PASSWORD")
 SERVICE_ID = os.environ.get("REG_RU_SERVICE_ID")
+CERT_PATH = os.environ.get("REG_RU_CERT_PATH")
+KEY_PATH = os.environ.get("REG_RU_KEY_PATH")
 BASE_DOMAIN = os.environ.get("REG_RU_TEST_DOMAIN")  # e.g. example.com
 SUB_LABEL = os.environ.get("REG_RU_TEST_SUBDOMAIN", "sub")  # sub.example.com
 
@@ -78,6 +80,10 @@ class RegRuLiveTests(unittest.TestCase):
         creds_content = [f"dns_regru_username={USERNAME}", f"dns_regru_password={PASSWORD}"]
         if SERVICE_ID:
             creds_content.append(f"dns_regru_service_id={SERVICE_ID}")
+        if CERT_PATH:
+            creds_content.append(f"dns_regru_cert_path={CERT_PATH}")
+        if KEY_PATH:
+            creds_content.append(f"dns_regru_key_path={KEY_PATH}")
         creds_content = "\n".join(creds_content) + "\n"
         self.temp_credentials_file.write(creds_content.encode("utf-8"))
         self.temp_credentials_file.flush()
