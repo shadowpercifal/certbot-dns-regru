@@ -24,6 +24,11 @@ For older Ubuntu distributions check out this PPA:
    ```
    sudo nano /etc/letsencrypt/regru.ini
    ```
+   Add provider configuration. It is strongly advised to use API password and not your regular password (can be set [here](https://www.reg.ru/user/account/settings/api/))
+   ```
+   dns_regru_username=<USERNAME>
+   dns_regru_password=<PASSWORD>
+    ```
 
 3. Make sure the file is only readable by root! Otherwise all your domains might be in danger:
    ```
