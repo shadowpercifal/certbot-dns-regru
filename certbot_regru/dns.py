@@ -76,11 +76,6 @@ class Authenticator(dns_common.DNSAuthenticator):
         self._get_regru_client().del_txt_record(validation_name, validation)
 
     def _get_regru_client(self):
-        service_id = None
-        try:
-            service_id = self.credentials.conf('service_id')
-        except Exception:  # service_id is optional
-            pass
         cert_tuple = None
         cert_path = None
         key_path = None
@@ -115,7 +110,6 @@ class Authenticator(dns_common.DNSAuthenticator):
         return _RegRuClient(
             self.credentials.conf('username'),
             self.credentials.conf('password'),
-            service_id=service_id,
             cert=cert_tuple
         )
 
@@ -123,11 +117,11 @@ class Authenticator(dns_common.DNSAuthenticator):
 class _RegRuClient(object):
     """Encapsulates communication with the Reg.ru API.
 
-    Supports either domain-based operations (default) or service-based
-    operations when a `service_id` credential is supplied.
+    Supports either domain-based operations (default) and service-based
+    operations (plugin specifies servtype).
     """
 
-    def __init__(self, username, password, service_id=None, cert=None):
+    def __init__(self, username, password, cert=None):
         self.http = _HttpClient(cert=cert)
         self.options = {
             'username': username,
@@ -137,7 +131,6 @@ class _RegRuClient(object):
             'output_format': 'json',
             'input_format': 'json',
         }
-        self.service_id = service_id
 
     def add_txt_record(self, record_name, record_content):
         """
@@ -198,14 +191,9 @@ class _RegRuClient(object):
         :returns: POST parameters
         :rtype: dict
         """
-        if self.service_id:
-            # Service-scoped request: replace domain list with service_id reference
-            input_data['subdomain'] = ''  # no subdomain context for service scope
-            input_data['domains'] = [{'service_id': self.service_id}]
-        else:
-            pieces = domain.split('.')
-            input_data['subdomain'] = '.'.join(pieces[:-2])
-            input_data['domains'] = [{'dname': '.'.join(pieces[-2:])}]
+        pieces = domain.split('.')
+        input_data['subdomain'] = '.'.join(pieces[:-2])
+        input_data['domains'] = [{'dname': '.'.join(pieces[-2:])},{'dname': '.'.join(pieces[-2:]), "servtype":"srv_dns_both"}]
 
         data = self.options.copy()
         data.update({'input_data': json.dumps(input_data)})
@@ -232,11 +220,12 @@ class _RegRuClient(object):
         if not isinstance(domains, list) or not domains:
             return False
 
-        first_domain = domains[0]
-        if not isinstance(first_domain, dict):
-            return False
-
-        return first_domain.get('result') == 'success'
+        for domain in domains:
+            if not isinstance(domain, dict):
+                return False
+            if domain.get('result') == 'success':
+                return True
+        return False
 
 
 class _HttpClient(object):

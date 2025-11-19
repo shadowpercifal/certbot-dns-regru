@@ -36,12 +36,7 @@ For older Ubuntu distributions check out this PPA:
    dns_regru_key_path=/path/to/key.pem
    ```
    
-   If you use reg.ru's service to manage external domains - you need to specify `service_id`. Just add the following to config:
-   ```
-   dns_regru_service_id=<SERVICE_ID>
-   ```
-
-   You can get service_id from page url of each domain's service
+   If you use reg.ru's service to manage external domains - no need to worry, plugin tries both plain domain and `"servtype":"srv_dns_both"`
 
 3. Make sure the file is only readable by root! Otherwise all your domains might be in danger:
    ```
