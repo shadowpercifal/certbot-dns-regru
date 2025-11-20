@@ -242,6 +242,10 @@ class _HttpClient(object):
         :raises requests.exceptions.RequestException: if an error occurs communicating with HTTP server
         """
         response = requests.post(url, data=data, cert=self.cert)
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except:
+            logger.error("Encountered error in response from Reg.ru API.")
+            logger.error("Response from Reg.ru API: %s", response.text)
 
         return response.json()

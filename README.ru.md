@@ -1,7 +1,7 @@
 # certbot-dns-regru (русская версия)
 Плагин аунтефикатор DNS для Certbot, работающий с Reg.ru
 
-[English](README.md)|Русский
+[**English**](README.md) | **Русский**
 
 Плагин-аутентификатор для [certbot](https://certbot.eff.org/) для поддержки DNS‑проверок (dns‑01) для доменов, обслуживаемых DNS‑серверами [Reg.ru](https://www.reg.ru).
 
@@ -35,6 +35,7 @@
    dns_regru_password = password
    ```
 
+   ### Не работает
    Если вы настроили авторизацию через SSL сертификат - укажите путь до сертификата и ключа в файле конфигурации
    ```
    dns_regru_cert_path=/path/to/cert.pem

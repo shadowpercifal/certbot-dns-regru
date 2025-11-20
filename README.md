@@ -1,7 +1,7 @@
 # certbot-dns-regru
 Reg.ru DNS authenticator plugin for Certbot
 
-English|[Русский](README.ru.md)
+**English** | [**Русский**](README.ru.md)
 
 An authenticator plugin for [certbot](https://certbot.eff.org/) to support [Let's Encrypt](https://letsencrypt.org/) 
 DNS challenges (dns-01) for domains managed by the nameservers of [Reg.ru](https://www.reg.ru).
@@ -30,6 +30,7 @@ For older Ubuntu distributions check out this PPA:
    dns_regru_password=<PASSWORD>
    ```
 
+   ### Does not work
    IF you have configured authentication via SSL certificates in API settings you need to specify path to key and certificate
    ```
    dns_regru_cert_path=/path/to/cert.pem
