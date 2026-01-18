@@ -76,41 +76,9 @@ class Authenticator(dns_common.DNSAuthenticator):
         self._get_regru_client().del_txt_record(validation_name, validation)
 
     def _get_regru_client(self):
-        cert_tuple = None
-        cert_path = None
-        key_path = None
-        cert_error = None
-        try:
-            cert_path = self.credentials.conf('cert_path')
-        except Exception:
-            cert_path = None
-        try:
-            key_path = self.credentials.conf('key_path')
-        except Exception:
-            key_path = None
-        if cert_path or key_path:
-            if not cert_path or not key_path:
-                cert_error = 'Both cert_path and key_path must be provided when using client SSL authentication.'
-            else:
-                # Validate existence and readability
-                for p in (cert_path, key_path):
-                    if not os.path.isfile(p):
-                        cert_error = 'File not found: {0}'.format(p)
-                        break
-                    try:
-                        with open(p, 'rb'):
-                            pass
-                    except Exception as e:
-                        cert_error = 'Cannot read {0}: {1}'.format(p, e)
-                        break
-                if not cert_error:
-                    cert_tuple = (cert_path, key_path)
-        if cert_error:
-            raise errors.PluginError(cert_error)
         return _RegRuClient(
             self.credentials.conf('username'),
-            self.credentials.conf('password'),
-            cert=cert_tuple
+            self.credentials.conf('password')
         )
 
 
@@ -127,7 +95,6 @@ class _RegRuClient(object):
             'username': username,
             'password': password,
             'io_encoding': 'utf8',
-            'show_input_params': 1,
             'output_format': 'json',
             'input_format': 'json',
         }

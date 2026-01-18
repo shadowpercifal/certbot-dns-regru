@@ -30,13 +30,6 @@ For older Ubuntu distributions check out this PPA:
    dns_regru_password=<PASSWORD>
    ```
 
-   ### Does not work
-   IF you have configured authentication via SSL certificates in API settings you need to specify path to key and certificate
-   ```
-   dns_regru_cert_path=/path/to/cert.pem
-   dns_regru_key_path=/path/to/key.pem
-   ```
-   
    If you use reg.ru's service to manage external domains - no need to worry, plugin tries both plain domain and `"servtype":"srv_dns_both"`
 
 3. Make sure the file is only readable by root! Otherwise all your domains might be in danger:

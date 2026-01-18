@@ -46,8 +46,6 @@ LIVE_ENABLED = all(os.environ.get(v) for v in REQUIRED_VARS) and os.environ.get(
 
 USERNAME = os.environ.get("REG_RU_USERNAME")
 PASSWORD = os.environ.get("REG_RU_PASSWORD")
-CERT_PATH = os.environ.get("REG_RU_CERT_PATH")
-KEY_PATH = os.environ.get("REG_RU_KEY_PATH")
 BASE_DOMAIN = os.environ.get("REG_RU_TEST_DOMAIN")  # e.g. example.com
 SUB_LABEL = os.environ.get("REG_RU_TEST_SUBDOMAIN", "sub")  # sub.example.com
 
@@ -77,10 +75,6 @@ class RegRuLiveTests(unittest.TestCase):
         # Create a temporary regru.ini file with proper key names expected by the plugin
         self.temp_credentials_file = tempfile.NamedTemporaryFile(prefix="regru", suffix=".ini", delete=False)
         creds_content = [f"dns_regru_username={USERNAME}", f"dns_regru_password={PASSWORD}"]
-        if CERT_PATH:
-            creds_content.append(f"dns_regru_cert_path={CERT_PATH}")
-        if KEY_PATH:
-            creds_content.append(f"dns_regru_key_path={KEY_PATH}")
         creds_content = "\n".join(creds_content) + "\n"
         self.temp_credentials_file.write(creds_content.encode("utf-8"))
         self.temp_credentials_file.flush()
