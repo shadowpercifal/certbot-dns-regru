@@ -30,7 +30,23 @@ For older Ubuntu distributions check out this PPA:
    dns_regru_password=<PASSWORD>
    ```
 
-   If you use reg.ru's service to manage external domains - no need to worry, plugin tries both plain domain and `"servtype":"srv_dns_both"`
+   Reg.ru now requires **client certificate (mTLS)** authentication for its API. If you have
+   enabled SSL authentication for the API, provide the paths to your client certificate and key:
+
+   ```
+   dns_regru_cert=/path/to/client.crt
+   dns_regru_key=/path/to/client.key
+   ```
+
+   `dns_regru_cert` may also point to a single PEM file containing both the certificate and
+   the private key (in which case `dns_regru_key` is optional).
+
+   For domains registered at Reg.ru the plugin uses `servtype="domain"` by default. If you use
+   Reg.ru's "DNS hosting" service for an **external** domain, set:
+
+   ```
+   dns_regru_servtype=srv_dns_both
+   ```
 
 3. Make sure the file is only readable by root! Otherwise all your domains might be in danger:
    ```

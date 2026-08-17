@@ -76,9 +76,20 @@ class Authenticator(dns_common.DNSAuthenticator):
         self._get_regru_client().del_txt_record(validation_name, validation)
 
     def _get_regru_client(self):
+        cert = self.credentials.conf('cert')
+        key = self.credentials.conf('key')
+        if cert and key:
+            client_cert = (cert, key)
+        elif cert:
+            client_cert = cert
+        else:
+            client_cert = None
+
         return _RegRuClient(
             self.credentials.conf('username'),
-            self.credentials.conf('password')
+            self.credentials.conf('password'),
+            cert=client_cert,
+            servtype=self.credentials.conf('servtype') or 'domain',
         )
 
 
@@ -89,8 +100,9 @@ class _RegRuClient(object):
     operations (plugin specifies servtype).
     """
 
-    def __init__(self, username, password, cert=None):
+    def __init__(self, username, password, cert=None, servtype='domain'):
         self.http = _HttpClient(cert=cert)
+        self.servtype = servtype
         self.options = {
             'username': username,
             'password': password,
@@ -160,7 +172,7 @@ class _RegRuClient(object):
         """
         pieces = domain.split('.')
         input_data['subdomain'] = '.'.join(pieces[:-2])
-        input_data['domains'] = [{'dname': '.'.join(pieces[-2:])},{'dname': '.'.join(pieces[-2:]), "servtype":"srv_dns_both"}]
+        input_data['domains'] = [{'dname': '.'.join(pieces[-2:]), 'servtype': self.servtype}]
 
         data = self.options.copy()
         data.update({'input_data': json.dumps(input_data)})
