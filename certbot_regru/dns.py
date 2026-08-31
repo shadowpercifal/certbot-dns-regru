@@ -88,8 +88,7 @@ class Authenticator(dns_common.DNSAuthenticator):
         return _RegRuClient(
             self.credentials.conf('username'),
             self.credentials.conf('password'),
-            cert=client_cert,
-            servtype=self.credentials.conf('servtype') or 'domain',
+            cert=client_cert
         )
 
 
@@ -100,9 +99,8 @@ class _RegRuClient(object):
     operations (plugin specifies servtype).
     """
 
-    def __init__(self, username, password, cert=None, servtype='domain'):
+    def __init__(self, username, password, cert=None):
         self.http = _HttpClient(cert=cert)
-        self.servtype = servtype
         self.options = {
             'username': username,
             'password': password,
@@ -172,7 +170,7 @@ class _RegRuClient(object):
         """
         pieces = domain.split('.')
         input_data['subdomain'] = '.'.join(pieces[:-2])
-        input_data['domains'] = [{'dname': '.'.join(pieces[-2:]), 'servtype': self.servtype}]
+        input_data['domains'] = [{'dname': '.'.join(pieces[-2:])},{'dname': '.'.join(pieces[-2:]), "servtype":"srv_dns_both"}]
 
         data = self.options.copy()
         data.update({'input_data': json.dumps(input_data)})
