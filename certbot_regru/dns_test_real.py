@@ -236,7 +236,7 @@ class RegRuClientCertTests(unittest.TestCase):
     def test_add_and_delete_subdomain_record_with_client_cert(self):
         record_name = self._record_name('_acme-challenge', SUB_LABEL)
         self.client.add_txt_record(record_name, self.txt_value)
-        #self.client.del_txt_record(record_name, self.txt_value)
+        self.client.del_txt_record(record_name, self.txt_value)
 
     def test_invalid_credentials_fail_with_client_cert(self):
         """A good certificate must not paper over a bad password."""

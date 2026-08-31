@@ -37,7 +37,7 @@ For older Ubuntu distributions check out this PPA:
    dns_regru_password=<PASSWORD>
    ```
 
-   Reg.ru now requires **client certificate (mTLS)** authentication for its API. If you have
+   Reg.ru may now require **client certificate (mTLS)** authentication for its API. If you have
    enabled SSL authentication for the API, provide the paths to your client certificate and key:
 
    ```
