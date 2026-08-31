@@ -76,9 +76,19 @@ class Authenticator(dns_common.DNSAuthenticator):
         self._get_regru_client().del_txt_record(validation_name, validation)
 
     def _get_regru_client(self):
+        cert = self.credentials.conf('cert')
+        key = self.credentials.conf('key')
+        if cert and key:
+            client_cert = (cert, key)
+        elif cert:
+            client_cert = cert
+        else:
+            client_cert = None
+
         return _RegRuClient(
             self.credentials.conf('username'),
-            self.credentials.conf('password')
+            self.credentials.conf('password'),
+            cert=client_cert
         )
 
 

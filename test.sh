@@ -18,14 +18,28 @@
 #   REG_RU_TEST_DOMAIN / -d <domain>
 # Optional:
 #   REG_RU_TEST_SUBDOMAIN / -s <label> (default: sub)
+#   REG_RU_CERT / -c <path>  TLS client certificate for the Reg.ru API
+#   REG_RU_KEY  / -k <path>  Private key, when it is not inside -c
 # Flags:
 #   -n  Skip virtualenv creation/activation
 #   -y  Non-interactive: do not prompt; abort if required values missing
 #   -h  Show help
 #
+# Client certificate testing:
+#   Reg.ru can require a TLS client certificate on the API endpoint. Supply it
+#   either as one bundled PEM (cert + key in the same file) or as two files:
+#     -c cert.pem                 bundled
+#     -c domain.crt -k domain.key separate
+#   When supplied, the extra cert test cases in dns_test_real run; otherwise
+#   they are skipped and only password auth is exercised. ../ssl-cert.sh can
+#   generate a throwaway self-signed pair to test the plumbing, though Reg.ru
+#   will reject a self-signed cert at handshake time.
+#
 # Examples:
 #   REG_RU_USERNAME=u REG_RU_PASSWORD=p REG_RU_TEST_DOMAIN=example.com bash test.sh
 #   bash test.sh -u u -p p -d example.com -s test
+#   bash test.sh -u u -p p -d example.com -c ./keys/shpw.ru.crt -k ./keys/shpw.ru.key
+#   bash test.sh -u u -p p -d example.com -c ./keys/shpw.ru.pem  # bundled
 #   bash test.sh -u u -p p -d example.com -n -y   # CI mode
 
 set -euo pipefail
@@ -42,6 +56,8 @@ while getopts ":u:p:d:s:c:k:nyh" opt; do
 		p) REG_RU_PASSWORD="$OPTARG" ;;
 		d) REG_RU_TEST_DOMAIN="$OPTARG" ;;
 		s) REG_RU_TEST_SUBDOMAIN="$OPTARG" ;;
+		c) REG_RU_CERT="$OPTARG" ;;
+		k) REG_RU_KEY="$OPTARG" ;;
 		n) SKIP_VENV=1 ;;
 		y) NON_INTERACTIVE=1 ;;
 		h) SHOW_HELP=1 ;;
@@ -120,13 +136,50 @@ if [[ -z ${REG_RU_USERNAME:-} || -z ${REG_RU_PASSWORD:-} || -z ${REG_RU_TEST_DOM
 	fi
 fi
 
+REG_RU_CERT=${REG_RU_CERT:-}
+REG_RU_KEY=${REG_RU_KEY:-}
+
+# A key without a certificate is always a mistake; a certificate without a key
+# is valid only when the key is bundled inside it, so check for that.
+if [[ -n $REG_RU_KEY && -z $REG_RU_CERT ]]; then
+	echo "-k/REG_RU_KEY given without -c/REG_RU_CERT." >&2
+	exit 1
+fi
+
+if [[ -n $REG_RU_CERT ]]; then
+	for f in "$REG_RU_CERT" ${REG_RU_KEY:+"$REG_RU_KEY"}; do
+		if [[ ! -r $f ]]; then
+			echo "Client certificate file not readable: $f" >&2
+			exit 1
+		fi
+	done
+	if [[ -z $REG_RU_KEY ]] && ! grep -q 'PRIVATE KEY' "$REG_RU_CERT"; then
+		echo "No private key found in $REG_RU_CERT and no -k given." >&2
+		echo "Pass the key with -k, or use a bundled PEM containing both." >&2
+		exit 1
+	fi
+	if [[ -n $REG_RU_KEY ]]; then
+		echo "Client certificate: $REG_RU_CERT (key: $REG_RU_KEY)"
+	else
+		echo "Client certificate: $REG_RU_CERT (bundled key)"
+	fi
+else
+	echo "No client certificate supplied; cert test cases will be skipped."
+fi
+
 export REG_RU_USERNAME REG_RU_PASSWORD REG_RU_TEST_DOMAIN REG_RU_TEST_SUBDOMAIN RUN_REG_RU_LIVE_TESTS=1
+export REG_RU_CERT REG_RU_KEY
 
 echo "Running mandatory live tests (dns_test_real)"
 LIVE_STATUS=0
 $PYTHON -m unittest certbot_regru.dns_test_real -v || LIVE_STATUS=$? || true
 
 echo "--- Summary ---"
+if [[ -n $REG_RU_CERT ]]; then
+	echo "Auth mode: password + client certificate"
+else
+	echo "Auth mode: password only (cert tests skipped)"
+fi
 echo "Live tests exit code: $LIVE_STATUS"
 if [[ $LIVE_STATUS -eq 0 ]]; then
   echo "Live tests passed."; exit 0
